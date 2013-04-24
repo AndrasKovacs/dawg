@@ -123,6 +123,7 @@ pack !val !eol !eow !chi =
         ord val `shiftL` 2, 
         fromEnum eol `shiftL` 1, 
         fromEnum eow]
+{- INLINE pack -}
 
 -- | Create a node from a "Word32" and a "NodeVector". It is assumed that the "Word32" is
 -- actually contained in the "NodeVector". 
@@ -133,6 +134,7 @@ unpack !n !v = Node {
     value      = chr $ fromIntegral $ (n .&. 1020) `shiftR` 2,
     endOfList  = ((n .&. 2) `shiftR` 1) == 1,
     endOfWord  = (n .&. 1) == 1}
+{- INLINE unpack -}
 
 
 -- | Get the root node from a node. 
@@ -141,7 +143,8 @@ getRoot !(Node{nodeVector=v}) = unpack (V.unsafeLast v) v
 
 -- | Create a node from some element of a "NodeVector". 
 getNodeAt :: NodeVector -> Word32 -> Node
-getNodeAt !v !i = unpack (V.unsafeIndex v (fromIntegral i)) v 
+getNodeAt !v !i = unpack (V.unsafeIndex v (fromIntegral i)) v
+{- INLINE getNodeAt -}
 
 -- | Generate a list of the direct children of a node. 
 getChildren :: Node -> [Node] 
@@ -151,6 +154,7 @@ getChildren !(Node v chi _ _ _)
         go !i !acc | endOfList n = n:acc
                    | otherwise   =  go (i + 1) (n:acc) where 
                         n = getNodeAt v i
+{- INLINE getChildren -}
 
 -- | Lookup a prefix by elementwise applying a comparison function. It is useful for
 -- setting case sensitivity, e.g. @insensitiveLookup = lookupPrefixBy (comparing toLower)@
@@ -158,19 +162,22 @@ lookupPrefixBy :: (Char -> Char -> Bool) -> String -> Node -> Maybe Node
 lookupPrefixBy p = go where
     go ![]     !n = Just n
     go !(x:xs) !n = maybe Nothing (go xs) (find ((p x) . value) (getChildren n))
+{- INLINE lookupPrefixBy -}
 
 -- | @lookupPrefix = lookupPrefixBy (==)@
 lookupPrefix :: String -> Node -> Maybe Node
 lookupPrefix = lookupPrefixBy (==)
+{- INLINE lookupPrefix -}
 
 -- | Test for membership with a comparison function. 
 elemBy :: (Char -> Char -> Bool) -> String -> Node -> Bool
 elemBy p !xs !n = maybe False endOfWord $ lookupPrefixBy p xs n
+{- INLINE elemBy -}
 
 -- | @elem = elemBy (==)@
 elem :: String -> Node -> Bool
 elem = elemBy (==)
-
+{- INLINE elem -}
 
 
 -- ************* Construction *******************
