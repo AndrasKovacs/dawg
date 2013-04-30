@@ -2,9 +2,8 @@
 
 Directed acyclic word graphs (DAWGs) are tries (see <http://en.wikipedia.org/wiki/Trie>) with merged identical nodes.
 
-DAWGs can represent string sets very compactly. This implementation uses less than 1/100th of the space used by Data.Set for string dictionaries. 
-
-However, no insertion or deletion can be practically done after the initial generation. 
+This implementation mainly focuses on compactness rather than genericity or dynamic usage. There are no insertion or deletion operations and the stored data must be mapped
+to 8-bit characters. On the flip side of the trade-off we can represent 150000+ word English dictionaries in less than 500 Kb.
 
 This implementation stores a DAWG node in four bytes, using 22 bits for indexing and 8 bits for data storage. This implies that
 
@@ -16,7 +15,7 @@ This implementation stores a DAWG node in four bytes, using 22 bits for indexing
 
 {-# LANGUAGE BangPatterns, PatternGuards, LambdaCase, TupleSections, RecordWildCards #-}
 
-module Data.DAWG (
+module Data.DAWG.Packed (
 
     -- * Types
       Node

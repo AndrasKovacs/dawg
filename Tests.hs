@@ -1,6 +1,6 @@
 
-import qualified Data.DAWG as D
-import Paths_dawg
+import qualified Data.DAWG.Packed as D
+import Paths_packed_dawg
 import Data.List
 import Data.Maybe
 

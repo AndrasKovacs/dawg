@@ -1,7 +1,7 @@
 import Criterion.Main
 import Criterion.Config
-import Data.DAWG
-import Paths_dawg
+import Data.DAWG.Packed
+import Paths_packed_dawg
 
 test =  defaultMainWith (defaultConfig  {cfgSamples = ljust 5}) (return())
  
