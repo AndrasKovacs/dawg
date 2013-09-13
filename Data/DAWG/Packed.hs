@@ -2,10 +2,9 @@
 
 Directed acyclic word graphs (DAWGs) are tries (see <http://en.wikipedia.org/wiki/Trie>) with merged identical nodes.
 
-This implementation mainly focuses on compactness rather than genericity or dynamic usage. There are no insertion or deletion operations and the stored data must be mapped
-to 8-bit characters. On the flip side of the trade-off we can represent 150000+ word English dictionaries in less than 500 Kb.
+This implementation mainly focuses on compactness (<500 Kb space for ~150000 word dictionaries) rather than genericity or dynamic usage. There are no insertion or deletion operations.
 
-This implementation stores a DAWG node in four bytes, using 22 bits for indexing and 8 bits for data storage. This implies that
+A DAWG node is stored in four bytes, using 22 bits for indexing and 8 bits for data storage. This implies that
 
     * The number of nodes shouldn't exceed 2^22, or 4194304.
 
@@ -117,15 +116,14 @@ instance NFData Node where
 -- | Create a bit-packed Word32. 
 pack :: Char -> Bool -> Bool -> Int -> Word32
 pack !val !eol !eow !chi = 
-    fromIntegral $ foldl' (.|.) 0 [
-        chi `shiftL` 10, 
-        ord val `shiftL` 2, 
-        fromEnum eol `shiftL` 1, 
-        fromEnum eow]
+    fromIntegral (
+            (chi `shiftL` 10) 
+        .|. (ord val `shiftL` 2) 
+        .|. (fromEnum eol `shiftL` 1) 
+        .|. (fromEnum eow))
 {- INLINE pack -}
 
--- | Create a node from a "Word32" and a "NodeVector". It is assumed that the "Word32" is
--- actually contained in the "NodeVector". 
+-- | Create a node from a "Word32" and a "NodeVector". 
 unpack :: Word32 -> NodeVector -> Node
 unpack !n !v = Node {
     nodeVector = v,
@@ -238,7 +236,7 @@ trieToNode trie = let
     vec = V.unsafeAccum (flip const) (V.replicate (i + 2) 0) assocs
     in unpack (V.unsafeLast vec) vec
 
--- | Allows for faster DAWG generation than "fromList". The ordering assumption is unchecked and a violation leads to invalid output. 
+-- | Allows for faster DAWG generation than "fromList". The ordering assumption is unchecked.
 fromAscList :: [String] -> Node
 fromAscList = trieToNode . mkTrie 
 

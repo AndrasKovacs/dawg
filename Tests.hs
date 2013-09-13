@@ -4,11 +4,10 @@ import Paths_packed_dawg
 import Data.List
 import Data.Maybe
 
-import Test.HUnit
+import Test.Tasty.HUnit
+import Test.Tasty.QuickCheck
+import Test.Tasty
 import Test.QuickCheck
-import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.Framework.Providers.QuickCheck2
 
 prop_preserve_elems :: Property
 prop_preserve_elems = forAll (arbitrary :: Gen [String])
@@ -46,15 +45,13 @@ test_serialization path = do
 
 main = do
     dictPath <- getDataFileName "TWL06.txt"
-    defaultMain [
+    defaultMain $ testGroup "Tests" [
         testGroup "Properties" [
             testProperty "preserving source elements" prop_preserve_elems,
             testProperty "elem" prop_elem,
             testProperty "discriminate elem" prop_discriminate_elems,
-            testProperty "lookupPrefix" prop_lookupPrefix],
+            testProperty "lookupPrefix" prop_lookupPrefix
+            ],
         testCase "twl06 DAWG validity" (test_twl06 dictPath),
         testCase "serialization" (test_serialization dictPath)
         ] 
-
-
-
