@@ -15,13 +15,13 @@ prop_preserve_elems = forAll (arbitrary :: Gen [String])
 
 prop_elem :: [String] -> Property
 prop_elem xs = (not $ null xs) ==> 
-    forAll (elements xs) (\x -> D.elem x dawg) 
+    forAll (elements xs) (\x -> D.member x dawg) 
     where dawg = D.fromList xs
 
 prop_discriminate_elems :: [String] -> Property
 prop_discriminate_elems xs = (not $ null xs) ==>
     forAll (arbitrary :: Gen String) 
-        (\x -> elem x xs == D.elem x dawg) 
+        (\x -> elem x xs == D.member x dawg) 
     where dawg = D.fromList xs
 
 prop_lookupPrefix :: [String] -> Property

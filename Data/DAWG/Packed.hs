@@ -1,6 +1,6 @@
 {- | 
 
-Directed acyclic word graphs (DAWGs) are tries (see <http://en.wikipedia.org/wiki/Trie>) with merged identical nodes.
+Fully minimized and bit-packed directed acyclic word graphs. 
 
 This implementation mainly focuses on compactness (<500 Kb space for ~150000 word dictionaries) rather than genericity or dynamic usage. There are no insertion or deletion operations.
 
@@ -25,14 +25,14 @@ module Data.DAWG.Packed (
     , fromFile 
 
     -- * Accessors
-    , value
+    , char
     , endOfWord
-    , getRoot
-    , getChildren
+    , root
+    , children
     , lookupPrefixBy
     , lookupPrefix
-    , elemBy
-    , elem
+    , memberBy
+    , member
 
     -- * Conversions
     , toList
@@ -56,7 +56,6 @@ import Control.Arrow
 import Data.Binary
 import Data.Vector.Binary
 import Data.List (foldl', sort, find)
-import Prelude hiding (elem)
 import Data.Bits
 import Data.Word
 import Data.Char
@@ -88,8 +87,8 @@ data Node = Node {
     {- UNPACK -} nodeVector :: !NodeVector,
     -- | Get the index of a node's first child node. 
     {- UNPACK -} childIndex :: !Word32, 
-    -- | Get the character value of a node. The root nodes have the null character as value. 
-    {- UNPACK -} value      :: !Char, 
+    -- | Get the character char of a node. The root nodes have the null character as char. 
+    {- UNPACK -} char       :: !Char, 
     -- | Indicates whether a node is the last in a list of children nodes. 
     {- UNPACK -} endOfList  :: !Bool, 
     -- | Indicates whether a prefix pointed to by the node is a valid word.
@@ -98,7 +97,7 @@ data Node = Node {
 
 instance Show Node where
     show (Node _ chi val eol eow) = printf 
-        "{childIndex: %d, value: %c, endOfList: %s, endOfWord: %s}" 
+        "{childIndex: %d, char: %c, endOfList: %s, endOfWord: %s}" 
         chi val (show eol) (show eow)
 
 
@@ -128,37 +127,37 @@ unpack :: Word32 -> NodeVector -> Node
 unpack !n !v = Node {
     nodeVector = v,
     childIndex = (n .&. 4294966272) `shiftR` 10,
-    value      = chr $ fromIntegral $ (n .&. 1020) `shiftR` 2,
+    char       = chr $ fromIntegral $ (n .&. 1020) `shiftR` 2,
     endOfList  = ((n .&. 2) `shiftR` 1) == 1,
     endOfWord  = (n .&. 1) == 1}
 {- INLINE unpack -}
 
 
 -- | Get the root node from a node. 
-getRoot :: Node -> Node
-getRoot !(Node{nodeVector=v}) = unpack (V.unsafeLast v) v
+root :: Node -> Node
+root !(Node{nodeVector=v}) = unpack (V.unsafeLast v) v
 
--- | Create a node from some element of a "NodeVector". 
+-- | Create a node from some memberent of a "NodeVector". 
 getNodeAt :: NodeVector -> Word32 -> Node
 getNodeAt !v !i = unpack (V.unsafeIndex v (fromIntegral i)) v
 {- INLINE getNodeAt -}
 
 -- | Generate a list of the direct children of a node. 
-getChildren :: Node -> [Node] 
-getChildren !(Node v chi _ _ _)
+children :: Node -> [Node] 
+children !(Node v chi _ _ _)
     | chi == 0  = [] -- The zero index is the end node by specification.
     | otherwise = go chi [] where
         go !i !acc | endOfList n = n:acc
                    | otherwise   =  go (i + 1) (n:acc) where 
                         n = getNodeAt v i
-{- INLINE getChildren -}
+{- INLINE children -}
 
--- | Lookup a prefix by elementwise applying a comparison function. It is useful for
+-- | Lookup a prefix by memberentwise applying a comparison function. It is useful for
 -- setting case sensitivity, e.g. @insensitiveLookup = lookupPrefixBy (comparing toLower)@
 lookupPrefixBy :: (Char -> Char -> Bool) -> String -> Node -> Maybe Node
 lookupPrefixBy p = go where
     go ![]     !n = Just n
-    go !(x:xs) !n = maybe Nothing (go xs) (find ((p x) . value) (getChildren n))
+    go !(x:xs) !n = maybe Nothing (go xs) (find ((p x) . char) (children n))
 {- INLINE lookupPrefixBy -}
 
 -- | @lookupPrefix = lookupPrefixBy (==)@
@@ -166,15 +165,15 @@ lookupPrefix :: String -> Node -> Maybe Node
 lookupPrefix = lookupPrefixBy (==)
 {- INLINE lookupPrefix -}
 
--- | Test for membership with a comparison function. 
-elemBy :: (Char -> Char -> Bool) -> String -> Node -> Bool
-elemBy p !xs !n = maybe False endOfWord $ lookupPrefixBy p xs n
-{- INLINE elemBy -}
+-- | Test for membership with an memberentwise comparison function. 
+memberBy :: (Char -> Char -> Bool) -> String -> Node -> Bool
+memberBy p !xs !n = maybe False endOfWord $ lookupPrefixBy p xs n
+{- INLINE memberBy -}
 
--- | @elem = elemBy (==)@
-elem :: String -> Node -> Bool
-elem = elemBy (==)
-{- INLINE elem -}
+-- | @member = memberBy (==)@
+member :: String -> Node -> Bool
+member = memberBy (==)
+{- INLINE member -}
 
 
 -- ************* Construction *******************
@@ -209,8 +208,8 @@ toFile = encodeFile
 -- | Get the list of all suffixes that end on a valid word ending. 
 -- When used on the root node this function enlists the original words. The resulting list is unsorted.
 toList :: Node -> [String]
-toList n = ["" | endOfWord n] ++ (go =<< getChildren n) where 
-    go n = [[value n] | endOfWord n] ++ (map (value n:) . go =<< getChildren n)
+toList n = ["" | endOfWord n] ++ (go =<< children n) where 
+    go n = [[char n] | endOfWord n] ++ (map (char n:) . go =<< children n)
 
 
 reduce :: Trie -> S.State (HM.HashMap [Word32] Int, Int) Word32
