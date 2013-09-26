@@ -97,7 +97,7 @@ data Node = Node {
 
 instance Show Node where
     show (Node _ chi val eol eow) = printf 
-        "{childIndex: %d, char: %c, endOfList: %s, endOfWord: %s}" 
+        "Node {childIndex = %d, char = %c, endOfList = %s, endOfWord: = %s}" 
         chi val (show eol) (show eow)
 
 
@@ -112,6 +112,7 @@ instance NFData Node where
     rnf (Node v chi val eol eow) = 
         rnf v `seq` rnf chi `seq` rnf val `seq` rnf eol `seq` rnf eow `seq` ()
 
+
 -- | Create a bit-packed Word32. 
 pack :: Char -> Bool -> Bool -> Int -> Word32
 pack !val !eol !eow !chi = 
@@ -120,7 +121,7 @@ pack !val !eol !eow !chi =
         .|. (ord val `shiftL` 2) 
         .|. (fromEnum eol `shiftL` 1) 
         .|. (fromEnum eow))
-{- INLINE pack -}
+
 
 -- | Create a node from a "Word32" and a "NodeVector". 
 unpack :: Word32 -> NodeVector -> Node
@@ -130,17 +131,17 @@ unpack !n !v = Node {
     char       = chr $ fromIntegral $ (n .&. 1020) `shiftR` 2,
     endOfList  = ((n .&. 2) `shiftR` 1) == 1,
     endOfWord  = (n .&. 1) == 1}
-{- INLINE unpack -}
 
 
 -- | Get the root node from a node. 
 root :: Node -> Node
 root !(Node{nodeVector=v}) = unpack (V.unsafeLast v) v
 
+
 -- | Create a node from some memberent of a "NodeVector". 
 getNodeAt :: NodeVector -> Word32 -> Node
 getNodeAt !v !i = unpack (V.unsafeIndex v (fromIntegral i)) v
-{- INLINE getNodeAt -}
+
 
 -- | Generate a list of the direct children of a node. 
 children :: Node -> [Node] 
@@ -150,7 +151,7 @@ children !(Node v chi _ _ _)
         go !i !acc | endOfList n = n:acc
                    | otherwise   =  go (i + 1) (n:acc) where 
                         n = getNodeAt v i
-{- INLINE children -}
+
 
 -- | Lookup a prefix by memberentwise applying a comparison function. It is useful for
 -- setting case sensitivity, e.g. @insensitiveLookup = lookupPrefixBy (comparing toLower)@
@@ -158,22 +159,21 @@ lookupPrefixBy :: (Char -> Char -> Bool) -> String -> Node -> Maybe Node
 lookupPrefixBy p = go where
     go ![]     !n = Just n
     go !(x:xs) !n = maybe Nothing (go xs) (find ((p x) . char) (children n))
-{- INLINE lookupPrefixBy -}
+
 
 -- | @lookupPrefix = lookupPrefixBy (==)@
 lookupPrefix :: String -> Node -> Maybe Node
 lookupPrefix = lookupPrefixBy (==)
-{- INLINE lookupPrefix -}
+
 
 -- | Test for membership with an memberentwise comparison function. 
 memberBy :: (Char -> Char -> Bool) -> String -> Node -> Bool
 memberBy p !xs !n = maybe False endOfWord $ lookupPrefixBy p xs n
-{- INLINE memberBy -}
+
 
 -- | @member = memberBy (==)@
 member :: String -> Node -> Bool
 member = memberBy (==)
-{- INLINE member -}
 
 
 -- ************* Construction *******************
@@ -201,9 +201,11 @@ mkTrie = foldl' (flip insert) (TrieNode False '\0' [])
 fromFile :: FilePath -> IO Node
 fromFile = decodeFile
 
+
 -- | Serialize a DAWG. 
 toFile :: FilePath -> Node -> IO ()
 toFile = encodeFile
+
 
 -- | Get the list of all suffixes that end on a valid word ending. 
 -- When used on the root node this function enlists the original words. The resulting list is unsorted.
@@ -235,9 +237,11 @@ trieToNode trie = let
     vec = V.unsafeAccum (flip const) (V.replicate (i + 2) 0) assocs
     in unpack (V.unsafeLast vec) vec
 
+
 -- | Allows for faster DAWG generation than "fromList". The ordering assumption is unchecked.
 fromAscList :: [String] -> Node
 fromAscList = trieToNode . mkTrie 
+
 
 fromList :: [String] -> Node
 fromList = fromAscList . sort
