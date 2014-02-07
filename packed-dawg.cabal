@@ -31,7 +31,7 @@ test-suite test
 
                         QuickCheck >= 2.5, HUnit >= 1.2, tasty >= 0.3, tasty-quickcheck >= 0.3, tasty-hunit >= 0.2
 
-    ghc-options:        -O2 -rtsopts -threaded 
+    ghc-options:        -O2 -rtsopts
 
 benchmark bench-dawg-gen
     main-is:            Benchmarks.hs
@@ -40,6 +40,6 @@ benchmark bench-dawg-gen
 
                         criterion >= 0.8
 
-    ghc-options:        -O2 -rtsopts -threaded 
+    ghc-options:        -O2 -rtsopts
     type:               exitcode-stdio-1.0
 

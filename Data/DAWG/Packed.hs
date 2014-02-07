@@ -138,7 +138,7 @@ root :: Node -> Node
 root !(Node{nodeVector=v}) = unpack (V.unsafeLast v) v
 
 
--- | Create a node from some memberent of a "NodeVector". 
+-- | Create a node from some member of a "NodeVector". 
 getNodeAt :: NodeVector -> Word32 -> Node
 getNodeAt !v !i = unpack (V.unsafeIndex v (fromIntegral i)) v
 
@@ -147,33 +147,41 @@ getNodeAt !v !i = unpack (V.unsafeIndex v (fromIntegral i)) v
 children :: Node -> [Node] 
 children !(Node v chi _ _ _)
     | chi == 0  = [] -- The zero index is the end node by specification.
-    | otherwise = go chi [] where
-        go !i !acc | endOfList n = n:acc
-                   | otherwise   =  go (i + 1) (n:acc) where 
-                        n = getNodeAt v i
+    | otherwise = go chi where
+        go !i | endOfList n = [n]
+              | otherwise = n : go (i + 1)
+              where n = getNodeAt v i 
 
 
--- | Lookup a prefix by memberentwise applying a comparison function. It is useful for
+-- | Lookup a prefix by memberwise applying a comparison function. It is useful for
 -- setting case sensitivity, e.g. @insensitiveLookup = lookupPrefixBy (comparing toLower)@
-lookupPrefixBy :: (Char -> Char -> Bool) -> String -> Node -> Maybe Node
+lookupPrefixBy :: (Char -> Char -> Ordering) -> String -> Node -> Maybe Node
 lookupPrefixBy p = go where
-    go ![]     !n = Just n
-    go !(x:xs) !n = maybe Nothing (go xs) (find ((p x) . char) (children n))
+
+    go !(x:xs) !n = go xs =<< findNode p x n 
+    go _       !n = Just n
+
+    findNode p c n = go' (children n) where
+        go' (n:ns) = case p c (char n) of
+            LT -> go' ns
+            EQ -> Just n
+            GT -> Nothing
+        go' _ = Nothing
 
 
 -- | @lookupPrefix = lookupPrefixBy (==)@
 lookupPrefix :: String -> Node -> Maybe Node
-lookupPrefix = lookupPrefixBy (==)
+lookupPrefix = lookupPrefixBy compare
 
 
--- | Test for membership with an memberentwise comparison function. 
-memberBy :: (Char -> Char -> Bool) -> String -> Node -> Bool
+-- | Test for membership with a memberwise comparison function. 
+memberBy :: (Char -> Char -> Ordering) -> String -> Node -> Bool
 memberBy p !xs !n = maybe False endOfWord $ lookupPrefixBy p xs n
 
 
 -- | @member = memberBy (==)@
 member :: String -> Node -> Bool
-member = memberBy (==)
+member = memberBy compare
 
 
 -- ************* Construction *******************
@@ -187,7 +195,7 @@ data Trie = TrieNode {
 
 insert :: String -> Trie -> Trie 
 insert []     !n = n {eow = True}
-insert (x:xs) !n@(TrieNode {chd = chd})
+insert (x:xs) !n@TrieNode{chd = chd}
     | c:cs <- chd, 
       val c == x = n {chd = insert xs c :cs}
     | otherwise  = n {chd = insert xs (TrieNode False x []) :chd}
@@ -215,7 +223,7 @@ toList n = ["" | endOfWord n] ++ (go =<< children n) where
 
 
 reduce :: Trie -> S.State (HM.HashMap [Word32] Int, Int) Word32
-reduce !node@(TrieNode{..}) = do
+reduce !node@TrieNode{..} = do
     xs <- mapM reduce chd
     (chiMap, i) <- S.get
     let proc = \case []   -> (0, [])
