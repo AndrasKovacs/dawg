@@ -84,15 +84,15 @@ type NodeVector = V.Vector Word32
 -- of the prefix pointed to by the node. 
 data Node = Node {
     -- | Get the underlying vector from a node.
-    {- UNPACK -} nodeVector :: !NodeVector,
+    nodeVector :: !NodeVector,
     -- | Get the index of a node's first child node. 
-    {- UNPACK -} childIndex :: !Word32, 
+    childIndex :: {-# UNPACK #-} !Word32, 
     -- | Get the character char of a node. The root nodes have the null character as char. 
-    {- UNPACK -} char       :: !Char, 
+    char       :: {-# UNPACK #-} !Char, 
     -- | Indicates whether a node is the last in a list of children nodes. 
-    {- UNPACK -} endOfList  :: !Bool, 
+    endOfList  :: !Bool, 
     -- | Indicates whether a prefix pointed to by the node is a valid word.
-    {- UNPACK -} endOfWord  :: !Bool} deriving Eq 
+    endOfWord  :: !Bool} deriving Eq 
 
 
 instance Show Node where
@@ -188,9 +188,9 @@ member = memberBy compare
 
 
 data Trie = TrieNode {
-    {- UNPACK -} eow :: !Bool,     
-    {- UNPACK -} val :: !Char,    
-    {- UNPACK -} chd :: ![Trie]}
+    eow :: !Bool,     
+    val :: {-# UNPACK #-} !Char,    
+    chd :: ![Trie]}
 
 
 insert :: String -> Trie -> Trie 
