@@ -1,9 +1,9 @@
 import Criterion.Main
-import Criterion.Config
+import Criterion.Types
 import Data.DAWG.Packed
 import Paths_packed_dawg
 
-test =  defaultMainWith (defaultConfig  {cfgSamples = ljust 5}) (return())
+test =  defaultMainWith (defaultConfig {timeLimit = 10})
  
 main = do
     dictPath <- getDataFileName "TWL06.txt"
