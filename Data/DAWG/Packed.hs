@@ -63,7 +63,7 @@ import Text.Printf
 {-| 
 The underlying container of the DAWG data. Modifying it will most likely result in an invalid DAWG.
 
-Each "Word32" represents a node. The format of a node is the following:
+Each 'Word32' represents a node. The format of a node is the following:
 
     * 22 bits: the index of the first child.
     * 8 bits: character data.
@@ -83,7 +83,7 @@ data Node = Node {
     nodeVector :: !NodeVector,
     -- | Get the index of a node's first child node. 
     childIndex :: {-# UNPACK #-} !Word32, 
-    -- | Get the character char of a node. The root nodes have the null character as char. 
+    -- | Get the character of a node. The root nodes have the null character. 
     char       :: {-# UNPACK #-} !Char, 
     -- | Indicates whether a node is the last in a list of children nodes. 
     endOfList  :: !Bool, 
@@ -109,7 +109,7 @@ instance NFData Node where
         rnf v `seq` rnf chi `seq` rnf val `seq` rnf eol `seq` rnf eow `seq` ()
 
 
--- | Create a bit-packed Word32. 
+-- | Create a bit-packed 'Word32'. 
 pack :: Char -> Bool -> Bool -> Int -> Word32
 pack !val !eol !eow !chi = 
     fromIntegral (
@@ -119,7 +119,7 @@ pack !val !eol !eow !chi =
         .|. (fromEnum eow))
 
 
--- | Create a node from a "Word32" and a "NodeVector". 
+-- | Create a node from a 'Word32' and a 'NodeVector'. 
 unpack :: Word32 -> NodeVector -> Node
 unpack !n !v = Node {
     nodeVector = v,
@@ -201,7 +201,7 @@ mkTrie :: [String] -> Trie
 mkTrie = foldl' (flip insert) (TrieNode False '\0' [])
 
 
--- | Read a DAWG previously serialized with "toFile" from a file. 
+-- | Read a DAWG previously serialized with 'toFile' from a file. 
 fromFile :: FilePath -> IO Node
 fromFile = decodeFile
 
@@ -242,10 +242,10 @@ trieToNode trie = let
     in unpack (V.unsafeLast vec) vec
 
 
--- | Allows for faster DAWG generation than "fromList". The ordering assumption is unchecked.
+-- | Allows for faster DAWG generation than 'fromList'. The input list must be in ascending order, but this is not checked.
 fromAscList :: [String] -> Node
 fromAscList = trieToNode . mkTrie 
 
-
+-- | Create a DAWG from a list of words. 
 fromList :: [String] -> Node
 fromList = fromAscList . sort
