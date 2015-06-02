@@ -1,7 +1,7 @@
 
 
 name:                packed-dawg
-version:             0.2.0.5
+version:             0.2.0.6
 synopsis:            Generation and traversal of highly compressed directed acyclic word graphs. 
 description:         Generation and traversal of highly compressed directed acyclic word graphs.
 license:             BSD3

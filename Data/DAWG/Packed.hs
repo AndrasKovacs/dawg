@@ -7,7 +7,6 @@ This implementation mainly focuses on compactness (<500 Kb space for ~150000 wor
 A DAWG node is stored in four bytes, using 22 bits for indexing and 8 bits for data storage. This implies that
 
     * The number of nodes shouldn't exceed 2^22, or 4194304.
-
     * Input characters should be mapped to the 0-255 range.
 
 -}
@@ -67,11 +66,8 @@ The underlying container of the DAWG data. Modifying it will most likely result 
 Each "Word32" represents a node. The format of a node is the following:
 
     * 22 bits: the index of the first child.
-
     * 8 bits: character data.
-
     * 1 bit: end-of-word flag.
-
     * 1 bit: end-of-childlist flag.
 
 The children of a node are laid out next to each other, so they can be iterated over by starting from the first child
