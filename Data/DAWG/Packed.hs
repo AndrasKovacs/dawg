@@ -48,8 +48,15 @@ module Data.DAWG.Packed (
     ) where
 
 import qualified Data.Vector.Unboxed as V
+
+
 import qualified Data.HashMap.Strict as HM
 import qualified Control.Monad.State.Strict as S
+
+import Control.Monad.ST.Strict
+import Data.STRef
+
+import Data.Function
 import Control.DeepSeq
 import Control.Arrow
 import Data.Binary
@@ -218,6 +225,38 @@ toList n = ["" | endOfWord n] ++ (go =<< children n) where
     go n = [[char n] | endOfWord n] ++ (map (char n:) . go =<< children n)
 
 
+-- trieToNode :: Trie -> Node
+-- trieToNode n = runST $ do
+--   m <- HT.new :: ST s (HashTable s [Word32] Int)
+--   HT.insert m [] 0  
+--   iref <- newSTRef (0 :: Int)
+
+--   let adjustChd = \case
+--         []   -> (0, [])
+--         [x]  -> (1, [x .|. 2])
+--         x:xs -> (succ *** (x:)) (adjustChd xs)
+
+--   root <- ($ n) $ fix $ \go node@TrieNode{..} -> do
+--     xs <- mapM go chd
+--     let (len, xs') = adjustChd xs
+--     i <- readSTRef iref
+--     pack val False eow `fmap`
+--       (maybe
+--         (do HT.insert m xs' $! (i + 1)
+--             writeSTRef iref $! (i + len)
+--             pure $! (i + 1))
+--         pure
+--         =<< (HT.lookup m xs'))
+
+--   i <- readSTRef iref
+--   mlist <- HT.toList m
+--   let assocs = (i + 1, root .|. 2):
+--         [(i', x) | (xs, i) <- mlist,
+--                    (i', x) <- zip [i..] xs]
+--       vec = V.unsafeAccum (flip const) (V.replicate (i + 2) 0) assocs
+
+--   pure $ unpack (V.unsafeLast vec) vec
+
 reduce :: Trie -> S.State (HM.HashMap [Word32] Int, Int) Word32
 reduce !node@TrieNode{..} = do
     xs <- mapM reduce chd
@@ -240,7 +279,7 @@ trieToNode trie = let
                                              (i', x) <- zip [i..] xs]
     vec = V.unsafeAccum (flip const) (V.replicate (i + 2) 0) assocs
     in unpack (V.unsafeLast vec) vec
-
+  
 
 -- | Allows for faster DAWG generation than 'fromList'. The input list must be in ascending order, but this is not checked.
 fromAscList :: [String] -> Node
