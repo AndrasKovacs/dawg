@@ -6,4 +6,5 @@ TAGS
 *.dat
 /dist
 /.cabal-sandbox
+/.stack-work
 *.dawg
