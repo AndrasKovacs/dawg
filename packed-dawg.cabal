@@ -19,7 +19,7 @@ Source-Repository head
 
 library
   exposed-modules:      Data.DAWG.Packed      
-  build-depends:        base >= 4.6.0 && <= 4.9,
+  build-depends:        base >= 4.6.0 && <= 4.11,
                         binary >= 0.7.0,
                         deepseq>=1.3,
                         mtl >=2.1,
@@ -31,7 +31,7 @@ test-suite test
   main-is:            Tests.hs
   type:               exitcode-stdio-1.0
 
-  build-depends:      base >= 4.6.0 && <= 4.9, vector >= 0.10.0, mtl >=2.1, 
+  build-depends:      base >= 4.6.0 && <= 4.11, vector >= 0.10.0, mtl >=2.1, 
                       vector-binary-instances >= 0.2.1.0, binary >= 0.7.0, 
                       deepseq>=1.3, unordered-containers >= 0.2,
                       QuickCheck >= 2.5, HUnit >= 1.2, tasty >= 0.3, 
@@ -41,7 +41,7 @@ test-suite test
 
 benchmark bench-dawg-gen
     main-is:            Benchmarks.hs
-    Build-depends:      base >= 4.6.0 && <= 4.9, vector >= 0.10.0, mtl >=2.1, 
+    Build-depends:      base >= 4.6.0 && <= 4.11, vector >= 0.10.0, mtl >=2.1, 
                         vector-binary-instances >= 0.2.1.0, binary >= 0.7.0, 
                         deepseq >= 1.3, unordered-containers >= 0.2,
                         criterion >= 1.0
