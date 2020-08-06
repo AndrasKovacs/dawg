@@ -1,6 +1,8 @@
+{-# language ViewPatterns #-}
 
 import qualified Data.DAWG.Packed as D
 import Paths_packed_dawg
+import Data.Coerce
 import Data.List
 import Data.Maybe
 
@@ -10,22 +12,22 @@ import Test.Tasty
 import Test.QuickCheck
 
 prop_preserve_elems :: Property
-prop_preserve_elems = forAll (arbitrary :: Gen [String])
-    (\xs -> (sort $ D.toList $ D.fromList xs) == (sort $ nub xs))
+prop_preserve_elems = forAll (arbitrary :: Gen [ASCIIString])
+    (\(coerce -> xs) -> (sort $ D.toList $ D.fromList xs) == (sort $ nub xs))
 
-prop_elem :: [String] -> Property
-prop_elem xs = (not $ null xs) ==> 
+prop_elem :: [ASCIIString] -> Property
+prop_elem (coerce -> xs) = (not $ null xs) ==>
     forAll (elements xs) (\x -> D.member x dawg) 
     where dawg = D.fromList xs
 
-prop_discriminate_elems :: [String] -> Property
-prop_discriminate_elems xs = (not $ null xs) ==>
-    forAll (arbitrary :: Gen String) 
-        (\x -> elem x xs == D.member x dawg) 
+prop_discriminate_elems :: [ASCIIString] -> Property
+prop_discriminate_elems (coerce -> xs) = (not $ null xs) ==>
+    forAll (arbitrary :: Gen ASCIIString)
+        (\(coerce -> x) -> elem x xs == D.member x dawg)
     where dawg = D.fromList xs
 
-prop_lookupPrefix :: [String] -> Property
-prop_lookupPrefix xs = (not $ null xs) ==> 
+prop_lookupPrefix :: [ASCIIString] -> Property
+prop_lookupPrefix (coerce -> xs) = (not $ null xs) ==>
     forAll (elements xs >>= elements . inits) 
         (\x -> isJust (D.lookupPrefix x dawg))
     where dawg = D.fromList xs
@@ -54,4 +56,4 @@ main = do
             ],
         testCase "twl06 DAWG validity" (test_twl06 dictPath),
         testCase "serialization" (test_serialization dictPath)
-        ] 
+        ]
